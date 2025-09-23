@@ -104,10 +104,6 @@ else:
         }
     }
 
-# Debug database configuration (remove in production)
-if DEBUG:
-    db_config = DATABASES["default"]
-    print(f"🔍 Database config: {db_config.get('HOST')}:{db_config.get('PORT')}/{db_config.get('NAME')}")
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
