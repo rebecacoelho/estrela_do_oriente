@@ -33,6 +33,19 @@ set -e\n\
 echo "🔧 Coletando arquivos estáticos..."\n\
 python manage.py collectstatic --noinput\n\
 \n\
+echo "⏳ Aguardando banco de dados..."\n\
+max_attempts=30\n\
+attempt=0\n\
+while [ $attempt -lt $max_attempts ]; do\n\
+  if python manage.py migrate --check >/dev/null 2>&1; then\n\
+    echo "✅ Banco de dados conectado!"\n\
+    break\n\
+  fi\n\
+  attempt=$((attempt + 1))\n\
+  echo "🔄 Tentativa $attempt/$max_attempts - Aguardando banco..."\n\
+  sleep 2\n\
+done\n\
+\n\
 echo "🔧 Executando migrações..."\n\
 python manage.py migrate --noinput\n\
 \n\
