@@ -38,20 +38,27 @@ if [ -z "$DATABASE_URL" ] && [ -z "$PGHOST" ]; then\n\
   exec gunicorn setup.wsgi:application --bind 0.0.0.0:8000 --workers 4\n\
 fi\n\
 \n\
-echo "Conectando ao banco de dados..."\n\
-max_attempts=30\n\
+echo "Testando conexão com banco..."\n\
+max_attempts=15\n\
 attempt=0\n\
+db_connected=false\n\
+\n\
 while [ $attempt -lt $max_attempts ]; do\n\
-  if python manage.py migrate --check >/dev/null 2>&1; then\n\
+  echo "Tentativa $((attempt + 1))/$max_attempts..."\n\
+  if DJANGO_SETTINGS_MODULE=setup.settings python -c "import django; django.setup(); from django.db import connection; connection.ensure_connection(); print(\"Conexão OK\")" 2>/dev/null; then\n\
+    echo "Banco conectado!"\n\
+    db_connected=true\n\
     break\n\
   fi\n\
   attempt=$((attempt + 1))\n\
   sleep 2\n\
 done\n\
 \n\
-if [ $attempt -lt $max_attempts ]; then\n\
+if [ "$db_connected" = true ]; then\n\
   echo "Executando migrações..."\n\
   python manage.py migrate --noinput\n\
+else\n\
+  echo "Banco não disponível, continuando sem migrações..."\n\
 fi\n\
 \n\
 echo "Iniciando servidor..."\n\
