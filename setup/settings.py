@@ -82,7 +82,7 @@ WSGI_APPLICATION = "setup.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Settings for Railway Database
+# Database configuration - Railway and local development compatible
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
@@ -92,17 +92,22 @@ if DATABASE_URL:
         "default": dj_database_url.parse(DATABASE_URL)
     }
 else:
-        # Development local
+    # Try Railway individual variables or fall back to local
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("PGDATABASE", "postgres"),
-            "USER": os.environ.get("PGUSER", "postgres"), 
-            "PASSWORD": os.environ.get("PGPASSWORD", "postgres"),
-            "HOST": os.environ.get("PGHOST", "localhost"),
-            "PORT": os.environ.get("PGPORT", "5432"),
+            "NAME": os.environ.get("PGDATABASE") or os.environ.get("DB_NAME", "postgres"),
+            "USER": os.environ.get("PGUSER") or os.environ.get("DB_USER", "postgres"),
+            "PASSWORD": os.environ.get("PGPASSWORD") or os.environ.get("DB_PASSWORD", "postgres"),
+            "HOST": os.environ.get("PGHOST") or os.environ.get("DB_HOST", "localhost"),
+            "PORT": os.environ.get("PGPORT") or os.environ.get("DB_PORT", "5432"),
         }
     }
+
+# Debug database configuration (remove in production)
+if DEBUG:
+    db_config = DATABASES["default"]
+    print(f"🔍 Database config: {db_config.get('HOST')}:{db_config.get('PORT')}/{db_config.get('NAME')}")
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [

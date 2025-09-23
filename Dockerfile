@@ -33,6 +33,13 @@ set -e\n\
 echo "🔧 Coletando arquivos estáticos..."\n\
 python manage.py collectstatic --noinput\n\
 \n\
+echo "🔍 Verificando variáveis de ambiente..."\n\
+echo "DATABASE_URL: ${DATABASE_URL:-NÃO DEFINIDA}"\n\
+echo "PGHOST: ${PGHOST:-NÃO DEFINIDA}"\n\
+echo "PGPORT: ${PGPORT:-NÃO DEFINIDA}"\n\
+echo "PGDATABASE: ${PGDATABASE:-NÃO DEFINIDA}"\n\
+echo "PGUSER: ${PGUSER:-NÃO DEFINIDA}"\n\
+\n\
 echo "⏳ Aguardando banco de dados..."\n\
 max_attempts=30\n\
 attempt=0\n\
@@ -45,6 +52,12 @@ while [ $attempt -lt $max_attempts ]; do\n\
   echo "🔄 Tentativa $attempt/$max_attempts - Aguardando banco..."\n\
   sleep 2\n\
 done\n\
+\n\
+if [ $attempt -eq $max_attempts ]; then\n\
+  echo "❌ Não foi possível conectar ao banco após $max_attempts tentativas"\n\
+  echo "🚀 Iniciando servidor sem migrações (pode causar erros)..."\n\
+  exec gunicorn setup.wsgi:application --bind 0.0.0.0:8000 --workers 4\n\
+fi\n\
 \n\
 echo "🔧 Executando migrações..."\n\
 python manage.py migrate --noinput\n\
