@@ -27,21 +27,18 @@ COPY . .
 EXPOSE 8000
 
 # Cria script de inicialização que executa collectstatic no runtime
-COPY <<EOF /app/entrypoint.sh
-#!/bin/bash
-set -e
-
-echo "🔧 Coletando arquivos estáticos..."
-python manage.py collectstatic --noinput
-
-echo "🔧 Executando migrações..."
-python manage.py migrate --noinput
-
-echo "🚀 Iniciando servidor..."
-exec gunicorn setup.wsgi:application --bind 0.0.0.0:8000 --workers 4
-EOF
-
-RUN chmod +x /app/entrypoint.sh
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+echo "🔧 Coletando arquivos estáticos..."\n\
+python manage.py collectstatic --noinput\n\
+\n\
+echo "🔧 Executando migrações..."\n\
+python manage.py migrate --noinput\n\
+\n\
+echo "🚀 Iniciando servidor..."\n\
+exec gunicorn setup.wsgi:application --bind 0.0.0.0:8000 --workers 4' > /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
 
 # Comando de inicialização
 CMD ["/app/entrypoint.sh"]
