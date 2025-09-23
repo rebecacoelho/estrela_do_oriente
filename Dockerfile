@@ -26,8 +26,22 @@ COPY . .
 # Expõe a porta do container
 EXPOSE 8000
 
-# Coleta arquivos estáticos (necessário pro Swagger e admin)
-RUN python manage.py collectstatic --noinput
+# Cria script de inicialização que executa collectstatic no runtime
+COPY <<EOF /app/entrypoint.sh
+#!/bin/bash
+set -e
+
+echo "🔧 Coletando arquivos estáticos..."
+python manage.py collectstatic --noinput
+
+echo "🔧 Executando migrações..."
+python manage.py migrate --noinput
+
+echo "🚀 Iniciando servidor..."
+exec gunicorn setup.wsgi:application --bind 0.0.0.0:8000 --workers 4
+EOF
+
+RUN chmod +x /app/entrypoint.sh
 
 # Comando de inicialização
-CMD ["gunicorn", "setup.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+CMD ["/app/entrypoint.sh"]
