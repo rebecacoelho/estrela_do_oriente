@@ -53,7 +53,7 @@ class EnderecoSerializer(serializers.ModelSerializer):
         exclude = ('aluno',)
 class AlunoSerializer(serializers.ModelSerializer):
     
-    endereco = EnderecoSerializer(source='endereco_aluno')
+    endereco = EnderecoSerializer()
     documentosaluno = DocumentosAlunoSerializer()
     situacaohabitacional = SituacaoHabitacionalSerializer()
     bensdomicilio = BensDomicilioSerializer()
@@ -110,8 +110,9 @@ class AlunoSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         """
-        Garante que o campo 'classificacoes' (ou qualquer campo que possa 
-        se tornar um set) seja uma lista para ser serializável em JSON.
+        Customiza a saída para:
+        1. Converter 'classificacoes' de set para lista
+        2. Mapear 'endereco_aluno' para 'endereco'
         """
         # Chama a implementação padrão para obter os dados serializados
         data = super().to_representation(instance)
@@ -124,6 +125,16 @@ class AlunoSerializer(serializers.ModelSerializer):
         # Se você usar o PrimaryKeyRelatedField, esta linha não será necessária.
         if 'responsaveis' in data and isinstance(data['responsaveis'], set):
             data['responsaveis'] = list(data['responsaveis'])
+        
+        # Serializa endereco_aluno como 'endereco'
+        if hasattr(instance, 'endereco_aluno'):
+            try:
+                endereco_serializer = EnderecoSerializer(instance.endereco_aluno)
+                data['endereco'] = endereco_serializer.data
+            except:
+                data['endereco'] = None
+        else:
+            data['endereco'] = None
             
         return data
     def to_internal_value(self, data):
@@ -198,10 +209,6 @@ class AlunoSerializer(serializers.ModelSerializer):
         # Adiciona objetos reconstruídos
         for parent, obj in nested_objects.items():
             data[parent] = obj
-        
-        # Mapeia 'endereco' para 'endereco_aluno' (source field)
-        if 'endereco' in data:
-            data['endereco_aluno'] = data.pop('endereco')
 
         # Converte strings JSON para listas/objetos reais
         json_fields = ['composicao_familiar', 'autorizados_retirada']
@@ -213,14 +220,28 @@ class AlunoSerializer(serializers.ModelSerializer):
                     print(f"✅ {field}: parseado de JSON string")
                 except json.JSONDecodeError as e:
                     print(f"❌ {field}: ERRO ao parsear JSON - {e}")
+        
+        # Converte responsaveis de string para lista
+        if 'responsaveis' in data and isinstance(data['responsaveis'], str):
+            data['responsaveis'] = [int(data['responsaveis'])]
+            print(f"✅ responsaveis: convertido de string '{data['responsaveis'][0]}' para lista")
+        
+        # Converte tipo_moradia_estrutura de string para lista (dentro de situacaohabitacional)
+        if 'situacaohabitacional' in data and isinstance(data['situacaohabitacional'], dict):
+            if 'tipo_moradia_estrutura' in data['situacaohabitacional']:
+                valor = data['situacaohabitacional']['tipo_moradia_estrutura']
+                if isinstance(valor, str):
+                    data['situacaohabitacional']['tipo_moradia_estrutura'] = [valor]
+                    print(f"✅ situacaohabitacional.tipo_moradia_estrutura: convertido de string para lista")
 
         print("\n📦 DADOS FINAIS ANTES DA VALIDAÇÃO DRF:")
-        print(f"  - endereco_aluno: {data.get('endereco_aluno', 'AUSENTE')}")
+        print(f"  - endereco: {data.get('endereco', 'AUSENTE')}")
         print(f"  - documentosaluno: {data.get('documentosaluno', 'AUSENTE')}")
         print(f"  - situacaohabitacional: {data.get('situacaohabitacional', 'AUSENTE')}")
         print(f"  - bensdomicilio: {data.get('bensdomicilio', 'AUSENTE')}")
         print(f"  - composicao_familiar: {data.get('composicao_familiar', 'AUSENTE')}")
         print(f"  - autorizados_retirada: {data.get('autorizados_retirada', 'AUSENTE')}")
+        print(f"  - responsaveis: {data.get('responsaveis', 'AUSENTE')}")
         print("=" * 60 + "\n")
         
         try:
@@ -237,7 +258,7 @@ class AlunoSerializer(serializers.ModelSerializer):
         return obj.renda_per_capta  # chama a propriedade do modelo
     def create(self, validated_data):
         documentos_data = validated_data.pop('documentosaluno')
-        endereco_data = validated_data.pop('endereco_aluno')  # source='endereco_aluno'
+        endereco_data = validated_data.pop('endereco')
         habitacional_data = validated_data.pop('situacaohabitacional')
         bens_data = validated_data.pop('bensdomicilio')
         familia_data = validated_data.pop('composicao_familiar')
@@ -266,7 +287,7 @@ class AlunoSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
         # Atualiza campos diretos
-        endereco_data = validated_data.pop('endereco_aluno', None)  # source='endereco_aluno'
+        endereco_data = validated_data.pop('endereco', None)
         documentos_data = validated_data.pop('documentosaluno', None)
         situacao_habitacional_data = validated_data.pop('situacaohabitacional', None)
         bens_data = validated_data.pop('bensdomicilio', None)
