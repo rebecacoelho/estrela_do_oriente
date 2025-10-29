@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import Sum
 from .responsavel import Responsavel
-from .endereco import Endereco
+from .endereco import Endereco, EnderecoAluno
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 import json
@@ -137,8 +137,8 @@ class Aluno(models.Model):
 
     def get_endereco(self):
         try:
-            return self.endereco
-        except Endereco.DoesNotExist as e:
+            return self.endereco_aluno
+        except EnderecoAluno.DoesNotExist as e:
             return f"Esse endereço não existe: {e}"
     def __str__(self):
         return f"Aluno {self.nome}, matricula: {self.matricula}"

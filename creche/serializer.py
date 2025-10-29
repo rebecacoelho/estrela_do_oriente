@@ -6,6 +6,7 @@ from .models import (
     Documento,
     Responsavel,
     Endereco,
+    EnderecoAluno,
     DocumentosAluno,
     SituacaoHabitacional,
     BensDomicilio,
@@ -48,11 +49,11 @@ class DocumentosAlunoSerializer(serializers.ModelSerializer):
         exclude = ('aluno',)
 class EnderecoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Endereco
+        model = EnderecoAluno
         exclude = ('aluno',)
 class AlunoSerializer(serializers.ModelSerializer):
     
-    endereco = EnderecoSerializer()
+    endereco = EnderecoSerializer(source='endereco_aluno')
     documentosaluno = DocumentosAlunoSerializer()
     situacaohabitacional = SituacaoHabitacionalSerializer()
     bensdomicilio = BensDomicilioSerializer()
@@ -197,6 +198,10 @@ class AlunoSerializer(serializers.ModelSerializer):
         # Adiciona objetos reconstruídos
         for parent, obj in nested_objects.items():
             data[parent] = obj
+        
+        # Mapeia 'endereco' para 'endereco_aluno' (source field)
+        if 'endereco' in data:
+            data['endereco_aluno'] = data.pop('endereco')
 
         # Converte strings JSON para listas/objetos reais
         json_fields = ['composicao_familiar', 'autorizados_retirada']
@@ -210,7 +215,7 @@ class AlunoSerializer(serializers.ModelSerializer):
                     print(f"❌ {field}: ERRO ao parsear JSON - {e}")
 
         print("\n📦 DADOS FINAIS ANTES DA VALIDAÇÃO DRF:")
-        print(f"  - endereco: {data.get('endereco', 'AUSENTE')}")
+        print(f"  - endereco_aluno: {data.get('endereco_aluno', 'AUSENTE')}")
         print(f"  - documentosaluno: {data.get('documentosaluno', 'AUSENTE')}")
         print(f"  - situacaohabitacional: {data.get('situacaohabitacional', 'AUSENTE')}")
         print(f"  - bensdomicilio: {data.get('bensdomicilio', 'AUSENTE')}")
@@ -232,7 +237,7 @@ class AlunoSerializer(serializers.ModelSerializer):
         return obj.renda_per_capta  # chama a propriedade do modelo
     def create(self, validated_data):
         documentos_data = validated_data.pop('documentosaluno')
-        endereco_data = validated_data.pop('endereco')
+        endereco_data = validated_data.pop('endereco_aluno')  # source='endereco_aluno'
         habitacional_data = validated_data.pop('situacaohabitacional')
         bens_data = validated_data.pop('bensdomicilio')
         familia_data = validated_data.pop('composicao_familiar')
@@ -244,7 +249,7 @@ class AlunoSerializer(serializers.ModelSerializer):
         aluno = Aluno.objects.create(**validated_data)
        
         DocumentosAluno.objects.create(aluno=aluno,**documentos_data)
-        Endereco.objects.create(aluno=aluno,**endereco_data)
+        EnderecoAluno.objects.create(aluno=aluno,**endereco_data)
         SituacaoHabitacional.objects.create(aluno=aluno,**habitacional_data)
         BensDomicilio.objects.create(aluno=aluno,**bens_data)
         membros = [MembroFamiliar(aluno=aluno, **item) for item in familia_data]
@@ -261,7 +266,7 @@ class AlunoSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
         # Atualiza campos diretos
-        endereco_data = validated_data.pop('endereco', None)
+        endereco_data = validated_data.pop('endereco_aluno', None)  # source='endereco_aluno'
         documentos_data = validated_data.pop('documentosaluno', None)
         situacao_habitacional_data = validated_data.pop('situacaohabitacional', None)
         bens_data = validated_data.pop('bensdomicilio', None)
@@ -275,7 +280,7 @@ class AlunoSerializer(serializers.ModelSerializer):
 
         # Atualizações OneToOne (create ou update)
         if endereco_data:
-            Endereco.objects.update_or_create(aluno=instance, defaults=endereco_data)
+            EnderecoAluno.objects.update_or_create(aluno=instance, defaults=endereco_data)
         if documentos_data:
             DocumentosAluno.objects.update_or_create(aluno=instance, defaults=documentos_data)
         if situacao_habitacional_data:
