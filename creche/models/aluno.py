@@ -45,6 +45,11 @@ class Aluno(models.Model):
         ('temp', _("TEMPORÁRIA")),
         ('perm', _("PERMANENTE"))
     ]
+    STATUS_MATRICULA = [
+        ('pre_matricula', _("Pré-Matrícula")),
+        ('matricula', _("Matrícula")),
+        ('rematricula', _("Rematrícula"))
+    ]
     # Campos principais do aluno
     nome = models.CharField(max_length=255)
     data_nascimento = models.DateField()
@@ -73,6 +78,7 @@ class Aluno(models.Model):
     ativo = models.BooleanField(default=True)
     serie_cursar = models.CharField(max_length=100, verbose_name=_('Série que irá cursar'), blank=True, null=True)
     ano_cursar = models.CharField(max_length=4, verbose_name=_('Ano de Início'), help_text=_('Ex: 2025'), blank=True, null=True)
+    status_matricula = models.CharField(max_length=20, choices=STATUS_MATRICULA, default='pre_matricula', verbose_name=_('Status da Matrícula'))
 
     @property
     def renda_familiar_total(self):

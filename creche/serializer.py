@@ -111,6 +111,7 @@ class AlunoSerializer(serializers.ModelSerializer):
             "ativo",
             "serie_cursar",
             "ano_cursar",
+            "status_matricula",
         ]
         read_only_fields = [
             "id",
@@ -298,11 +299,16 @@ class AlunoSerializer(serializers.ModelSerializer):
         bens_data = validated_data.pop('bensdomicilio', None)
         familiares_data = validated_data.pop('composicao_familiar', [])
         autorizados_data = validated_data.pop('autorizados_retirada', [])
+        responsaveis_data = validated_data.pop('responsaveis', None)
 
         # Atualiza campos simples do Aluno
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+        
+        # Atualiza ManyToMany de responsaveis
+        if responsaveis_data is not None:
+            instance.responsaveis.set(responsaveis_data)
 
         # Atualizações OneToOne (create ou update)
         if endereco_data:

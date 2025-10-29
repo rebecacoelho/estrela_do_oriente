@@ -43,3 +43,4 @@ echo "  1. python manage.py createsuperuser"
 echo "  2. Teste o cadastro de alunos no frontend"
 echo ""
 
+
