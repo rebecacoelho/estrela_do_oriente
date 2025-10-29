@@ -17,9 +17,11 @@ class Documento(models.Model):
     )
     tipo = models.CharField(max_length=50, choices=TIPOS)
     arquivo = models.FileField(
-        upload_to="documentos/outros/"
+        upload_to="documentos/outros/",
+        null=True,
+        blank=True
     )  # armazenar URL do object storage
     baixado_em = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.tipo} - {self.aluno or self.matricula}"
+        return f"{self.tipo} - {self.aluno.nome if self.aluno else "Sem aluno vinculado"}"

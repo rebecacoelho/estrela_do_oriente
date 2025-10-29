@@ -40,10 +40,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
-    "creche",
+    "creche.apps.CrecheConfig",
     "rest_framework_simplejwt",
     "corsheaders",
     "drf_yasg",
+    'drf_spectacular',
+    "whitenoise.runserver_nostatic",
 ]
 
 MIDDLEWARE = [
@@ -82,7 +84,7 @@ WSGI_APPLICATION = "setup.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Database configuration - Railway and local development compatible
+# DATABASE - Compatible with Railway and local development
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
@@ -91,20 +93,26 @@ if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.parse(DATABASE_URL)
     }
+elif config("DEBUG", cast=bool):
+    # SQLite para desenvolvimento local
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 else:
-    # Try Railway individual variables or fall back to local
+    # PostgreSQL para produção
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("PGDATABASE") or os.environ.get("DB_NAME", "postgres"),
-            "USER": os.environ.get("PGUSER") or os.environ.get("DB_USER", "postgres"),
-            "PASSWORD": os.environ.get("PGPASSWORD") or os.environ.get("DB_PASSWORD", "postgres"),
-            "HOST": os.environ.get("PGHOST") or os.environ.get("DB_HOST", "localhost"),
-            "PORT": os.environ.get("PGPORT") or os.environ.get("DB_PORT", "5432"),
+            "NAME": config("PGDATABASE", default="postgres"),
+            "USER": config("PGUSER", default="postgres"),
+            "PASSWORD": config("PGPASSWORD", default="postgres"),
+            "HOST": config("PGHOST", default="localhost"),
+            "PORT": config("PGPORT", default="5432"),
         }
     }
-
-
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
@@ -120,7 +128,8 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser",
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", cast=bool)
