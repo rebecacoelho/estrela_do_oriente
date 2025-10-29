@@ -40,10 +40,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
-    "creche",
+    "creche.apps.CrecheConfig",
     "rest_framework_simplejwt",
     "corsheaders",
     "drf_yasg",
+    'drf_spectacular',
+    "whitenoise.runserver_nostatic",
 ]
 
 MIDDLEWARE = [
@@ -81,17 +83,27 @@ WSGI_APPLICATION = "setup.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("PGDATABASE", "postgres"),
-        "USER": os.environ.get("PGUSER", "postgres"),
-        "PASSWORD": os.environ.get("PGPASSWORD", "postgres"),
-        "HOST": os.environ.get("PGHOST", "localhost"),
-        "PORT": os.environ.get("PGPORT", "5432"),
+# DATABASE
+if config("DEBUG", cast=bool):
+    # DB SQLite para desenvolvimento
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
-
+else:
+    # DB PostgreSQL para produção
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("PGDATABASE", default="postgres"),
+            "USER": config("PGUSER", default="postgres"),
+            "PASSWORD": config("PGPASSWORD", default="postgres"),
+            "HOST": config("PGHOST", default="localhost"),
+            "PORT": config("PGPORT", default="5432"),
+        }
+    }
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
@@ -107,7 +119,8 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser",
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", cast=bool)

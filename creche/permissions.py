@@ -7,8 +7,10 @@ class IsDiretor(BasePermission):
     Permite acesso apenas para usuários que sejam Diretores
     """
     def has_permission(self, request, view):
-        return (
-            request.user 
-            and request.user.is_authenticated 
-            and Diretor.objects.filter(user=request.user).exists()
-        )
+        if not (request.user and request.user.is_authenticated):
+            return False
+        if hasattr(request.user,'is_director'):
+            return request.user.is_director
+        is_director = Diretor.objects.filter(user=request.user).exists()
+        request.user.is_director = is_director
+        return is_director
