@@ -77,31 +77,40 @@ class AlunoSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "nome",
-            # Campos removidos (não existem no banco antigo):
-            # "raca", "genero", "gemeos", "irmao_na_creche", "restricao_alimentar",
-            # "alergia", "deficiencias_multiplas", "mobilidade_reduzida",
-            # "crianca_alvo_educacao_especial", "responsavel_recebe_auxilio", "telefone",
-            # "serie_cursar", "ano_cursar"
-            "classificacoes",
-            "endereco",
-            "documentosaluno",
+            "data_nascimento",
+            "genero",
+            "raca",
+            "gemeos",
+            "irmao_na_creche",
             "cadastro_nacional_de_saude",
             "unidade_de_saude",
             "problemas_de_saude",
+            "restricao_alimentar",
+            "alergia",
+            "deficiencias_multiplas",
+            "mobilidade_reduzida",
+            "crianca_alvo_educacao_especial",
+            "classificacoes",
+            "responsavel_recebe_auxilio",
+            "telefone",
+            "endereco",
+            "documentosaluno",
             "situacaohabitacional",
             "bensdomicilio",
             "composicao_familiar",
             "autorizados_retirada",
             "matricula",
-            "data_nascimento",
             "responsaveis",
             "criado_em",
             "turma",
             "renda_familiar_mensal",
             "comprovante_residencia_url",
+            "certidao_nascimento",
             "renda_familiar_total", 
             "renda_per_capta", 
             "ativo",
+            "serie_cursar",
+            "ano_cursar",
         ]
         read_only_fields = [
             "id",
@@ -254,11 +263,13 @@ class AlunoSerializer(serializers.ModelSerializer):
         except Exception as e:
             print(f"❌ ERRO NA VALIDAÇÃO DRF: {e}\n")
             raise
+    
     def get_renda_familiar_total(self, obj):
         return obj.renda_familiar_total  # chama a propriedade do modelo
 
     def get_renda_per_capta(self, obj):
         return obj.renda_per_capta  # chama a propriedade do modelo
+    
     def create(self, validated_data):
         documentos_data = validated_data.pop('documentosaluno')
         endereco_data = validated_data.pop('endereco')
@@ -271,26 +282,16 @@ class AlunoSerializer(serializers.ModelSerializer):
         if isinstance(classificacoes_data, set):
             classificacoes_data = list(classificacoes_data)
         
-        # Remove campos que não existem no schema antigo do banco
-        campos_nao_existentes = [
-            'genero', 'raca', 'serie_cursar', 'ano_cursar', 
-            'crianca_alvo_educacao_especial', 'gemeos', 'irmao_na_creche',
-            'restricao_alimentar', 'alergia', 'deficiencias_multiplas',
-            'mobilidade_reduzida', 'responsavel_recebe_auxilio', 'telefone'
-        ]
-        for campo in campos_nao_existentes:
-            validated_data.pop(campo, None)
-        
         print(f"🔨 Criando aluno com dados: {list(validated_data.keys())}")
         aluno = Aluno.objects.create(**validated_data)
        
-        DocumentosAluno.objects.create(aluno=aluno,**documentos_data)
-        EnderecoAluno.objects.create(aluno=aluno,**endereco_data)
-        SituacaoHabitacional.objects.create(aluno=aluno,**habitacional_data)
-        BensDomicilio.objects.create(aluno=aluno,**bens_data)
+        DocumentosAluno.objects.create(aluno=aluno, **documentos_data)
+        EnderecoAluno.objects.create(aluno=aluno, **endereco_data)
+        SituacaoHabitacional.objects.create(aluno=aluno, **habitacional_data)
+        BensDomicilio.objects.create(aluno=aluno, **bens_data)
         membros = [MembroFamiliar(aluno=aluno, **item) for item in familia_data]
         MembroFamiliar.objects.bulk_create(membros)
-        autorizados = [PessoaAutorizada(aluno=aluno,**item) for item in autorizados_retirada_data]
+        autorizados = [PessoaAutorizada(aluno=aluno, **item) for item in autorizados_retirada_data]
         PessoaAutorizada.objects.bulk_create(autorizados)
         if classificacoes_data:
             aluno.classificacoes = classificacoes_data
