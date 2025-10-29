@@ -245,14 +245,62 @@ class DocumentoSerializer(serializers.ModelSerializer):
 
 
 class ResponsavelSerializer(serializers.ModelSerializer):
-    # Campos opcionais até migrations serem executadas
-    rg = serializers.CharField(max_length=15, required=False, allow_blank=True)
-    local_de_trabalho = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    # Campo endereco_texto para receber string do frontend
+    endereco_texto = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    
+    # Campos opcionais
+    rg = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
+    local_trabalho = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    profissao = serializers.CharField(max_length=100, required=False, allow_blank=True, default='')
+    data_nascimento = serializers.DateField(required=False, allow_null=True)
+    renda_mensal = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True, default=0)
     
     class Meta:
         model = Responsavel
-        fields = ["id", "nome", "cpf", "telefone", "email", "endereco", "local_de_trabalho", "rg", "dados_extra"]
-        read_only_fields = ["id"]
+        fields = ["id", "nome", "cpf", "rg", "data_nascimento", "telefone", "email", "profissao", 
+                  "local_trabalho", "renda_mensal", "endereco", "endereco_texto"]
+        read_only_fields = ["id", "endereco"]
+    
+    def create(self, validated_data):
+        # Se veio endereco_texto, cria um objeto Endereco primeiro
+        endereco_texto = validated_data.pop('endereco_texto', None)
+        
+        if endereco_texto:
+            # Cria um endereço simplificado compatível com schema antigo
+            endereco_obj = Endereco.objects.create(
+                logradouro=endereco_texto[:255],
+                numero='S/N',
+                bairro='',
+                cidade='',  # campo do schema antigo
+                estado='',  # campo do schema antigo
+                cep='',
+                complemento=''
+            )
+            validated_data['endereco'] = endereco_obj
+        
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        # Se veio endereco_texto, atualiza o endereço
+        endereco_texto = validated_data.pop('endereco_texto', None)
+        
+        if endereco_texto:
+            if instance.endereco:
+                instance.endereco.logradouro = endereco_texto[:255]
+                instance.endereco.save()
+            else:
+                endereco_obj = Endereco.objects.create(
+                    logradouro=endereco_texto[:255],
+                    numero='S/N',
+                    bairro='',
+                    cidade='',  # campo do schema antigo
+                    estado='',  # campo do schema antigo
+                    cep='',
+                    complemento=''
+                )
+                validated_data['endereco'] = endereco_obj
+        
+        return super().update(instance, validated_data)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
