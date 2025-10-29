@@ -57,7 +57,7 @@ class Aluno(models.Model):
     problemas_de_saude = models.BooleanField(default=False, null=True, blank=True)
     restricao_alimentar = models.TextField(blank=True, null=True)
     alergia = models.TextField(blank=True, null=True)
-    deficiencies_multiplas = models.TextField(blank=True, null=True)
+    deficiencias_multiplas = models.TextField(blank=True, null=True)
     mobilidade_reduzida = models.CharField(max_length=25, blank=True, choices=MOBILIDADE_REDUZIDA, null=True)
     crianca_alvo_educacao_especial = models.TextField(null=True, blank=True)
     classificacoes = models.JSONField(default=list, blank=True, verbose_name=_('Classificações Especiais'))
