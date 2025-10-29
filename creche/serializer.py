@@ -126,31 +126,49 @@ class AlunoSerializer(serializers.ModelSerializer):
             
         return data
     def to_internal_value(self, data):
-        mutable_data = data.copy()
+        mutable_data = data.copy() if hasattr(data, 'copy') else dict(data)
+        
+        # Processa campos com notação de ponto (ex: endereco.logradouro)
+        # e monta objetos aninhados
+        nested_objects = {}
+        keys_to_remove = []
+        
+        for key in list(mutable_data.keys()):
+            if '.' in key:
+                parent, child = key.split('.', 1)
+                if parent not in nested_objects:
+                    nested_objects[parent] = {}
+                
+                value = mutable_data[key]
+                # Converte valores booleanos e números
+                if value == 'true':
+                    value = True
+                elif value == 'false':
+                    value = False
+                elif value == 'null':
+                    value = None
+                elif isinstance(value, str) and value.isdigit():
+                    value = int(value)
+                    
+                nested_objects[parent][child] = value
+                keys_to_remove.append(key)
+        
+        # Remove chaves com ponto e adiciona objetos reconstruídos
+        for key in keys_to_remove:
+            del mutable_data[key]
+        
+        for parent, obj in nested_objects.items():
+            mutable_data[parent] = obj
 
-        # Converte strings JSON para listas/objetos reais
-        json_fields = [
-            'composicao_familiar', 
-            'autorizados_retirada', 
-            'classificacoes',
-            'endereco',
-            'documentosaluno',
-            'situacaohabitacional',
-            'bensdomicilio',
-            'responsaveis'  # Array de IDs
-        ]
+        # Converte strings JSON para listas/objetos reais (para composicao_familiar e autorizados_retirada)
+        json_fields = ['composicao_familiar', 'autorizados_retirada']
         
         for field in json_fields:
             if field in mutable_data and isinstance(mutable_data[field], str):
                 try:
                     mutable_data[field] = json.loads(mutable_data[field])
                 except json.JSONDecodeError:
-                    # Para classificacoes, pode vir como 'TEA,Cegueira'
-                    if field == 'classificacoes':
-                        if ',' in mutable_data[field]:
-                            mutable_data[field] = [x.strip() for x in mutable_data[field].split(',')]
-                        else:
-                            mutable_data[field] = [mutable_data[field]]
+                    pass
 
         return super().to_internal_value(mutable_data)
     def get_renda_familiar_total(self, obj):
