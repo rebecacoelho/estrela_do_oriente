@@ -262,6 +262,8 @@ class ResponsavelSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "endereco"]
     
     def create(self, validated_data):
+        from datetime import date
+        
         # Se veio endereco_texto, cria um objeto Endereco primeiro
         endereco_texto = validated_data.pop('endereco_texto', None)
         
@@ -277,6 +279,19 @@ class ResponsavelSerializer(serializers.ModelSerializer):
                 complemento=''
             )
             validated_data['endereco'] = endereco_obj
+        
+        # Garante valores padrão para campos NOT NULL no banco antigo
+        if 'data_nascimento' not in validated_data or validated_data['data_nascimento'] is None:
+            validated_data['data_nascimento'] = date(1900, 1, 1)  # Data padrão placeholder
+        
+        if 'rg' not in validated_data or not validated_data['rg']:
+            validated_data['rg'] = 'Não informado'
+        
+        if 'profissao' not in validated_data or not validated_data['profissao']:
+            validated_data['profissao'] = 'Não informado'
+        
+        if 'renda_mensal' not in validated_data or validated_data['renda_mensal'] is None:
+            validated_data['renda_mensal'] = 0.00
         
         return super().create(validated_data)
     

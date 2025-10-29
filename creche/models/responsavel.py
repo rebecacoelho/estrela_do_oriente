@@ -10,12 +10,12 @@ class Responsavel(models.Model):
     nome = models.CharField(max_length=100)
     cpf = models.CharField(max_length=14, unique=True)
     rg = models.CharField(max_length=20)
-    data_nascimento = models.DateField(null=True, blank=True)  # Opcional temporariamente
+    data_nascimento = models.DateField()  # NOT NULL no banco antigo
     telefone = models.CharField(max_length=15)
     email = models.EmailField()
-    profissao = models.CharField(max_length=100, blank=True, null=True, default='')
+    profissao = models.CharField(max_length=100)  # NOT NULL no banco antigo
     local_trabalho = models.CharField(max_length=200, blank=True, null=True)
-    renda_mensal = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
+    renda_mensal = models.DecimalField(max_digits=10, decimal_places=2)  # NOT NULL no banco antigo
     
     # Relacionamentos (compatível com schema antigo)
     endereco = models.ForeignKey('Endereco', on_delete=models.CASCADE, null=True, blank=True)
