@@ -196,8 +196,22 @@ class AlunoSerializer(serializers.ModelSerializer):
                 except json.JSONDecodeError as e:
                     print(f"❌ {field}: ERRO ao parsear JSON - {e}")
 
+        print("\n📦 DADOS FINAIS ANTES DA VALIDAÇÃO DRF:")
+        print(f"  - endereco presente: {'endereco' in mutable_data}")
+        print(f"  - documentosaluno presente: {'documentosaluno' in mutable_data}")
+        print(f"  - situacaohabitacional presente: {'situacaohabitacional' in mutable_data}")
+        print(f"  - bensdomicilio presente: {'bensdomicilio' in mutable_data}")
+        print(f"  - composicao_familiar presente: {'composicao_familiar' in mutable_data}")
+        print(f"  - autorizados_retirada presente: {'autorizados_retirada' in mutable_data}")
         print("=" * 60 + "\n")
-        return super().to_internal_value(mutable_data)
+        
+        try:
+            result = super().to_internal_value(mutable_data)
+            print("✅ VALIDAÇÃO DRF PASSOU!\n")
+            return result
+        except Exception as e:
+            print(f"❌ ERRO NA VALIDAÇÃO DRF: {e}\n")
+            raise
     def get_renda_familiar_total(self, obj):
         return obj.renda_familiar_total  # chama a propriedade do modelo
 
