@@ -270,7 +270,12 @@ class AlunoSerializer(serializers.ModelSerializer):
             classificacoes_data = list(classificacoes_data)
         
         # Remove campos que não existem no schema antigo do banco
-        campos_nao_existentes = ['genero', 'serie_cursar', 'ano_cursar', 'crianca_alvo_educacao_especial']
+        campos_nao_existentes = [
+            'genero', 'raca', 'serie_cursar', 'ano_cursar', 
+            'crianca_alvo_educacao_especial', 'gemeos', 'irmao_na_creche',
+            'restricao_alimentar', 'alergia', 'deficiencias_multiplas',
+            'mobilidade_reduzida', 'responsavel_recebe_auxilio', 'telefone'
+        ]
         for campo in campos_nao_existentes:
             validated_data.pop(campo, None)
         
