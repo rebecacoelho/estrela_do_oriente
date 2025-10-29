@@ -53,7 +53,7 @@ class EnderecoSerializer(serializers.ModelSerializer):
         exclude = ('aluno',)
 class AlunoSerializer(serializers.ModelSerializer):
     
-    endereco = EnderecoSerializer()
+    endereco = EnderecoSerializer(source='endereco_aluno')
     documentosaluno = DocumentosAlunoSerializer()
     situacaohabitacional = SituacaoHabitacionalSerializer()
     bensdomicilio = BensDomicilioSerializer()
@@ -124,7 +124,6 @@ class AlunoSerializer(serializers.ModelSerializer):
         """
         Customiza a saída para:
         1. Converter 'classificacoes' de set para lista
-        2. Mapear 'endereco_aluno' para 'endereco'
         """
         # Chama a implementação padrão para obter os dados serializados
         data = super().to_representation(instance)
@@ -137,16 +136,6 @@ class AlunoSerializer(serializers.ModelSerializer):
         # Se você usar o PrimaryKeyRelatedField, esta linha não será necessária.
         if 'responsaveis' in data and isinstance(data['responsaveis'], set):
             data['responsaveis'] = list(data['responsaveis'])
-        
-        # Serializa endereco_aluno como 'endereco'
-        if hasattr(instance, 'endereco_aluno'):
-            try:
-                endereco_serializer = EnderecoSerializer(instance.endereco_aluno)
-                data['endereco'] = endereco_serializer.data
-            except:
-                data['endereco'] = None
-        else:
-            data['endereco'] = None
             
         return data
     def to_internal_value(self, data):
@@ -272,7 +261,7 @@ class AlunoSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         documentos_data = validated_data.pop('documentosaluno')
-        endereco_data = validated_data.pop('endereco')
+        endereco_data = validated_data.pop('endereco_aluno')
         habitacional_data = validated_data.pop('situacaohabitacional')
         bens_data = validated_data.pop('bensdomicilio')
         familia_data = validated_data.pop('composicao_familiar')
@@ -303,7 +292,7 @@ class AlunoSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
         # Atualiza campos diretos
-        endereco_data = validated_data.pop('endereco', None)
+        endereco_data = validated_data.pop('endereco_aluno', None)
         documentos_data = validated_data.pop('documentosaluno', None)
         situacao_habitacional_data = validated_data.pop('situacaohabitacional', None)
         bens_data = validated_data.pop('bensdomicilio', None)
