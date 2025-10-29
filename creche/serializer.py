@@ -126,21 +126,18 @@ class AlunoSerializer(serializers.ModelSerializer):
             
         return data
     def to_internal_value(self, data):
-        import logging
-        logger = logging.getLogger(__name__)
-        
         # Torna mutável se for QueryDict do Django
         if hasattr(data, '_mutable'):
             data._mutable = True
         
         mutable_data = data.copy() if hasattr(data, 'copy') else dict(data)
         
-        # DEBUG: Mostra primeiros campos recebidos
-        logger.info("=" * 60)
-        logger.info("DADOS RECEBIDOS (primeiros 10 campos):")
-        for i, key in enumerate(list(mutable_data.keys())[:10]):
-            logger.info(f"  {key} = {repr(mutable_data[key])}")
-        logger.info("=" * 60)
+        # DEBUG com print (sempre aparece no Gunicorn)
+        print("\n" + "=" * 60)
+        print("🔍 ALUNO SERIALIZER - DADOS RECEBIDOS (primeiros 15 campos):")
+        for i, key in enumerate(list(mutable_data.keys())[:15]):
+            print(f"  {key} = {repr(mutable_data[key])[:100]}")
+        print("=" * 60 + "\n")
         
         # Processa campos com notação de ponto (ex: endereco.logradouro)
         nested_objects = {}
@@ -175,10 +172,10 @@ class AlunoSerializer(serializers.ModelSerializer):
                 keys_to_remove.append(key)
         
         # DEBUG: Mostra objetos reconstruídos
-        logger.info("OBJETOS ANINHADOS RECONSTRUÍDOS:")
+        print("\n🔧 OBJETOS ANINHADOS RECONSTRUÍDOS:")
         for parent, obj in nested_objects.items():
-            logger.info(f"  {parent}: {obj}")
-        logger.info("=" * 60)
+            print(f"  {parent}: {obj}")
+        print("=" * 60 + "\n")
         
         # Remove chaves com ponto
         for key in keys_to_remove:
@@ -195,11 +192,11 @@ class AlunoSerializer(serializers.ModelSerializer):
             if field in mutable_data and isinstance(mutable_data[field], str):
                 try:
                     mutable_data[field] = json.loads(mutable_data[field])
-                    logger.info(f"✅ {field}: parseado de JSON string")
+                    print(f"✅ {field}: parseado de JSON string")
                 except json.JSONDecodeError as e:
-                    logger.error(f"❌ {field}: ERRO ao parsear JSON - {e}")
+                    print(f"❌ {field}: ERRO ao parsear JSON - {e}")
 
-        logger.info("=" * 60)
+        print("=" * 60 + "\n")
         return super().to_internal_value(mutable_data)
     def get_renda_familiar_total(self, obj):
         return obj.renda_familiar_total  # chama a propriedade do modelo
