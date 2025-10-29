@@ -130,26 +130,39 @@ class AlunoSerializer(serializers.ModelSerializer):
         if hasattr(data, '_mutable'):
             data._mutable = True
         
-        mutable_data = data.copy() if hasattr(data, 'copy') else dict(data)
+        # Converte para dict padrão do Python (QueryDict causa problemas)
+        if hasattr(data, 'dict'):
+            # QueryDict.dict() retorna um dict Python normal, mas perde listas
+            # Precisamos processar manualmente
+            regular_dict = {}
+            for key in data.keys():
+                values = data.getlist(key)  # Pega todos os valores para essa chave
+                if len(values) == 1:
+                    regular_dict[key] = values[0]
+                else:
+                    regular_dict[key] = values  # Mantém como lista se houver múltiplos
+            data = regular_dict
+        else:
+            data = dict(data)
         
         # DEBUG com print (sempre aparece no Gunicorn)
         print("\n" + "=" * 60)
         print("🔍 ALUNO SERIALIZER - DADOS RECEBIDOS (primeiros 15 campos):")
-        for i, key in enumerate(list(mutable_data.keys())[:15]):
-            print(f"  {key} = {repr(mutable_data[key])[:100]}")
+        for i, key in enumerate(list(data.keys())[:15]):
+            print(f"  {key} = {repr(data[key])[:100]}")
         print("=" * 60 + "\n")
         
         # Processa campos com notação de ponto (ex: endereco.logradouro)
         nested_objects = {}
         keys_to_remove = []
         
-        for key in list(mutable_data.keys()):
+        for key in list(data.keys()):
             if '.' in key:
                 parent, child = key.split('.', 1)
                 if parent not in nested_objects:
                     nested_objects[parent] = {}
                 
-                value = mutable_data[key]
+                value = data[key]
                 
                 # Converte valores booleanos, números e null
                 if value == 'true':
@@ -179,34 +192,34 @@ class AlunoSerializer(serializers.ModelSerializer):
         
         # Remove chaves com ponto
         for key in keys_to_remove:
-            del mutable_data[key]
+            del data[key]
         
         # Adiciona objetos reconstruídos
         for parent, obj in nested_objects.items():
-            mutable_data[parent] = obj
+            data[parent] = obj
 
         # Converte strings JSON para listas/objetos reais
         json_fields = ['composicao_familiar', 'autorizados_retirada']
         
         for field in json_fields:
-            if field in mutable_data and isinstance(mutable_data[field], str):
+            if field in data and isinstance(data[field], str):
                 try:
-                    mutable_data[field] = json.loads(mutable_data[field])
+                    data[field] = json.loads(data[field])
                     print(f"✅ {field}: parseado de JSON string")
                 except json.JSONDecodeError as e:
                     print(f"❌ {field}: ERRO ao parsear JSON - {e}")
 
         print("\n📦 DADOS FINAIS ANTES DA VALIDAÇÃO DRF:")
-        print(f"  - endereco presente: {'endereco' in mutable_data}")
-        print(f"  - documentosaluno presente: {'documentosaluno' in mutable_data}")
-        print(f"  - situacaohabitacional presente: {'situacaohabitacional' in mutable_data}")
-        print(f"  - bensdomicilio presente: {'bensdomicilio' in mutable_data}")
-        print(f"  - composicao_familiar presente: {'composicao_familiar' in mutable_data}")
-        print(f"  - autorizados_retirada presente: {'autorizados_retirada' in mutable_data}")
+        print(f"  - endereco: {data.get('endereco', 'AUSENTE')}")
+        print(f"  - documentosaluno: {data.get('documentosaluno', 'AUSENTE')}")
+        print(f"  - situacaohabitacional: {data.get('situacaohabitacional', 'AUSENTE')}")
+        print(f"  - bensdomicilio: {data.get('bensdomicilio', 'AUSENTE')}")
+        print(f"  - composicao_familiar: {data.get('composicao_familiar', 'AUSENTE')}")
+        print(f"  - autorizados_retirada: {data.get('autorizados_retirada', 'AUSENTE')}")
         print("=" * 60 + "\n")
         
         try:
-            result = super().to_internal_value(mutable_data)
+            result = super().to_internal_value(data)
             print("✅ VALIDAÇÃO DRF PASSOU!\n")
             return result
         except Exception as e:
