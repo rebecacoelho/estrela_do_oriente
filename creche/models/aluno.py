@@ -47,7 +47,7 @@ class Aluno(models.Model):
     ]
     nome = models.CharField(max_length=255)
     data_nascimento = models.DateField()
-    genero = models.CharField(max_length=50,choices=GENEROS)
+    # genero = models.CharField(max_length=50,choices=GENEROS)  # Não existe no banco antigo
     raca = models.CharField(max_length=25,choices=COR)
     gemeos = models.CharField(max_length=255,null=True,blank=True)
     irmao_na_creche = models.BooleanField(default=False,null=True,blank=True)
@@ -58,7 +58,7 @@ class Aluno(models.Model):
     alergia = models.TextField(blank=True,null=True)
     deficiencias_multiplas = models.TextField(blank=True,null=True)
     mobilidade_reduzida = models.CharField(max_length=25,blank=True,choices=MOBILIDADE_REDUZIDA,null=True)
-    crianca_alvo_educacao_especial = models.TextField(null=True,blank=True)
+    # crianca_alvo_educacao_especial = models.TextField(null=True,blank=True)  # Não existe no banco antigo
     classificacoes = models.JSONField(default=list,blank=True,verbose_name=_('Classificações Especiais'))
     responsavel_recebe_auxilio = models.TextField()
     telefone = models.CharField(max_length=20, blank=False, null=False)
