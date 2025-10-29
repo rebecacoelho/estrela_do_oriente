@@ -30,11 +30,24 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 from rest_framework.permissions import AllowAny
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
+)
+
+# Schema view para drf_yasg (compatibilidade)
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Estrela do Oriente API",
+        default_version='v1',
+        description="API para gerenciamento da creche Estrela do Oriente",
+    ),
+    public=True,
+    permission_classes=[AllowAny],
 )
 
 router = routers.DefaultRouter()
@@ -63,4 +76,12 @@ urlpatterns = [
         ),
         name='redoc',
     ),
+    # URLs antigas do drf_yasg para compatibilidade
+    path("api/swagger.json/", schema_view.without_ui(cache_timeout=0), name="schema-json"),
+    path(
+        "api/swagger/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    path("api/redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
