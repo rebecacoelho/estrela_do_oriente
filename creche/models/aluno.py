@@ -52,7 +52,7 @@ class Aluno(models.Model):
     gemeos = models.CharField(max_length=255,null=True,blank=True)
     irmao_na_creche = models.BooleanField(default=False,null=True,blank=True)
     cadastro_nacional_de_saude = models.CharField(max_length=15)
-    unidade_de_saude = models.CharField(max_length=10)
+    unidade_de_saude = models.CharField(max_length=100)  # Aumentado para aceitar nomes completos
     problemas_de_saude = models.BooleanField(default=False,null=True,blank=True)
     restricao_alimentar = models.TextField(blank=True,null=True)
     alergia = models.TextField(blank=True,null=True)

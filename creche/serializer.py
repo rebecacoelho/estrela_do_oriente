@@ -128,17 +128,29 @@ class AlunoSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         mutable_data = data.copy()
 
-        # Converte strings JSON para listas reais
-        for field in ['composicao_familiar', 'autorizados_retirada', 'classificacoes']:
+        # Converte strings JSON para listas/objetos reais
+        json_fields = [
+            'composicao_familiar', 
+            'autorizados_retirada', 
+            'classificacoes',
+            'endereco',
+            'documentosaluno',
+            'situacaohabitacional',
+            'bensdomicilio',
+            'responsaveis'  # Array de IDs
+        ]
+        
+        for field in json_fields:
             if field in mutable_data and isinstance(mutable_data[field], str):
                 try:
                     mutable_data[field] = json.loads(mutable_data[field])
                 except json.JSONDecodeError:
-                    # Pode vir como 'TEA,Cegueira'
-                    if ',' in mutable_data[field]:
-                        mutable_data[field] = [x.strip() for x in mutable_data[field].split(',')]
-                    else:
-                        mutable_data[field] = [mutable_data[field]]
+                    # Para classificacoes, pode vir como 'TEA,Cegueira'
+                    if field == 'classificacoes':
+                        if ',' in mutable_data[field]:
+                            mutable_data[field] = [x.strip() for x in mutable_data[field].split(',')]
+                        else:
+                            mutable_data[field] = [mutable_data[field]]
 
         return super().to_internal_value(mutable_data)
     def get_renda_familiar_total(self, obj):
