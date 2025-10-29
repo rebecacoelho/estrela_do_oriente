@@ -76,19 +76,20 @@ class Aluno(models.Model):
         upload_to="documentos/certidoes/",null=True,blank=True
     )
     ativo = models.BooleanField(default=True)
-    serie_cursar = models.CharField(
-        max_length=100, 
-        verbose_name=_('Série que irá cursar'), 
-        blank=True, 
-        null=True
-    )
-    ano_cursar = models.CharField(
-        max_length=4, 
-        verbose_name=_('Ano de Início'),
-        help_text=_('Ex: 2025'),
-        blank=True, 
-        null=True
-    )
+    # Campos não existem no banco antigo:
+    # serie_cursar = models.CharField(
+    #     max_length=100, 
+    #     verbose_name=_('Série que irá cursar'), 
+    #     blank=True, 
+    #     null=True
+    # )
+    # ano_cursar = models.CharField(
+    #     max_length=4, 
+    #     verbose_name=_('Ano de Início'),
+    #     help_text=_('Ex: 2025'),
+    #     blank=True, 
+    #     null=True
+    # )
 
     @property
     def renda_familiar_total(self):

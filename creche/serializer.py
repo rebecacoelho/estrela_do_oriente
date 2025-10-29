@@ -90,7 +90,8 @@ class AlunoSerializer(serializers.ModelSerializer):
             "autorizados_retirada",
             "matricula",
             "data_nascimento",
-            "genero",
+            # Campos removidos (não existem no banco antigo):
+            # "genero", "serie_cursar", "ano_cursar", "crianca_alvo_educacao_especial"
             "responsaveis",
             "criado_em",
             "turma",
