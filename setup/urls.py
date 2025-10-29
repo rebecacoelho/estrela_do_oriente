@@ -22,7 +22,7 @@ from django.conf import settings
 from rest_framework import routers
 from creche.views.aluno import AlunoViewSet
 from creche.views.documento import DocumentoViewSet
-from creche.views.diretor import DiretorViewSet
+# from creche.views.diretor import DiretorViewSet  # REMOVIDO - Não é mais necessário
 from creche.views.responsavel import ResponsavelViewSet
 from creche.views.user import RegisterView
 from drf_spectacular.views import (
@@ -54,7 +54,7 @@ router = routers.DefaultRouter()
 router.register(r"alunos", AlunoViewSet)
 router.register(r"documentos", DocumentoViewSet)
 router.register(r"responsaveis", ResponsavelViewSet)
-router.register(r"diretores", DiretorViewSet)
+# router.register(r"diretores", DiretorViewSet)  # REMOVIDO - Não é mais necessário
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/register/", RegisterView.as_view(), name="register"),

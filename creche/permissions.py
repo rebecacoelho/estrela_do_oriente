@@ -1,16 +1,11 @@
 # permissions.py
-from rest_framework.permissions import BasePermission
-from .models import Diretor
+from rest_framework.permissions import BasePermission, IsAuthenticated
 
 class IsDiretor(BasePermission):
     """
-    Permite acesso apenas para usuários que sejam Diretores
+    SIMPLIFICADO: Agora permite acesso para qualquer usuário autenticado.
+    Não verifica mais se é Diretor - qualquer usuário com token válido tem acesso.
     """
     def has_permission(self, request, view):
-        if not (request.user and request.user.is_authenticated):
-            return False
-        if hasattr(request.user,'is_director'):
-            return request.user.is_director
-        is_director = Diretor.objects.filter(user=request.user).exists()
-        request.user.is_director = is_director
-        return is_director
+        # Simplesmente verifica se está autenticado
+        return request.user and request.user.is_authenticated

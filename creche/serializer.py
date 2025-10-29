@@ -245,9 +245,13 @@ class DocumentoSerializer(serializers.ModelSerializer):
 
 
 class ResponsavelSerializer(serializers.ModelSerializer):
+    # Campos opcionais até migrations serem executadas
+    rg = serializers.CharField(max_length=15, required=False, allow_blank=True)
+    local_de_trabalho = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    
     class Meta:
         model = Responsavel
-        fields = ["id", "nome", "cpf", "telefone", "email", "endereco","local_de_trabalho","rg", "dados_extra"]
+        fields = ["id", "nome", "cpf", "telefone", "email", "endereco", "local_de_trabalho", "rg", "dados_extra"]
         read_only_fields = ["id"]
 
 class UserSerializer(serializers.ModelSerializer):
