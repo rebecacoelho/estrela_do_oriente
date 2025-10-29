@@ -126,10 +126,23 @@ class AlunoSerializer(serializers.ModelSerializer):
             
         return data
     def to_internal_value(self, data):
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Torna mutável se for QueryDict do Django
+        if hasattr(data, '_mutable'):
+            data._mutable = True
+        
         mutable_data = data.copy() if hasattr(data, 'copy') else dict(data)
         
+        # DEBUG: Mostra primeiros campos recebidos
+        logger.info("=" * 60)
+        logger.info("DADOS RECEBIDOS (primeiros 10 campos):")
+        for i, key in enumerate(list(mutable_data.keys())[:10]):
+            logger.info(f"  {key} = {repr(mutable_data[key])}")
+        logger.info("=" * 60)
+        
         # Processa campos com notação de ponto (ex: endereco.logradouro)
-        # e monta objetos aninhados
         nested_objects = {}
         keys_to_remove = []
         
@@ -140,36 +153,53 @@ class AlunoSerializer(serializers.ModelSerializer):
                     nested_objects[parent] = {}
                 
                 value = mutable_data[key]
-                # Converte valores booleanos e números
+                
+                # Converte valores booleanos, números e null
                 if value == 'true':
                     value = True
                 elif value == 'false':
                     value = False
-                elif value == 'null':
+                elif value == 'null' or value == '':
                     value = None
-                elif isinstance(value, str) and value.isdigit():
-                    value = int(value)
+                elif isinstance(value, str):
+                    # Tenta converter números (incluindo floats)
+                    try:
+                        if '.' in value and value.replace('.', '').replace('-', '').isdigit():
+                            value = float(value)
+                        elif value.isdigit():
+                            value = int(value)
+                    except:
+                        pass  # Mantém como string
                     
                 nested_objects[parent][child] = value
                 keys_to_remove.append(key)
         
-        # Remove chaves com ponto e adiciona objetos reconstruídos
+        # DEBUG: Mostra objetos reconstruídos
+        logger.info("OBJETOS ANINHADOS RECONSTRUÍDOS:")
+        for parent, obj in nested_objects.items():
+            logger.info(f"  {parent}: {obj}")
+        logger.info("=" * 60)
+        
+        # Remove chaves com ponto
         for key in keys_to_remove:
             del mutable_data[key]
         
+        # Adiciona objetos reconstruídos
         for parent, obj in nested_objects.items():
             mutable_data[parent] = obj
 
-        # Converte strings JSON para listas/objetos reais (para composicao_familiar e autorizados_retirada)
+        # Converte strings JSON para listas/objetos reais
         json_fields = ['composicao_familiar', 'autorizados_retirada']
         
         for field in json_fields:
             if field in mutable_data and isinstance(mutable_data[field], str):
                 try:
                     mutable_data[field] = json.loads(mutable_data[field])
-                except json.JSONDecodeError:
-                    pass
+                    logger.info(f"✅ {field}: parseado de JSON string")
+                except json.JSONDecodeError as e:
+                    logger.error(f"❌ {field}: ERRO ao parsear JSON - {e}")
 
+        logger.info("=" * 60)
         return super().to_internal_value(mutable_data)
     def get_renda_familiar_total(self, obj):
         return obj.renda_familiar_total  # chama a propriedade do modelo
