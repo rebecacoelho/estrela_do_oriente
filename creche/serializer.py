@@ -111,7 +111,6 @@ class AlunoSerializer(serializers.ModelSerializer):
             "ativo",
             "serie_cursar",
             "ano_cursar",
-            "status_matricula",
         ]
         read_only_fields = [
             "id",
