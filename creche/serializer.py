@@ -77,7 +77,11 @@ class AlunoSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "nome",
-            "raca",
+            # Campos removidos (não existem no banco antigo):
+            # "raca", "genero", "gemeos", "irmao_na_creche", "restricao_alimentar",
+            # "alergia", "deficiencias_multiplas", "mobilidade_reduzida",
+            # "crianca_alvo_educacao_especial", "responsavel_recebe_auxilio", "telefone",
+            # "serie_cursar", "ano_cursar"
             "classificacoes",
             "endereco",
             "documentosaluno",
@@ -90,8 +94,6 @@ class AlunoSerializer(serializers.ModelSerializer):
             "autorizados_retirada",
             "matricula",
             "data_nascimento",
-            # Campos removidos (não existem no banco antigo):
-            # "genero", "serie_cursar", "ano_cursar", "crianca_alvo_educacao_especial"
             "responsaveis",
             "criado_em",
             "turma",
