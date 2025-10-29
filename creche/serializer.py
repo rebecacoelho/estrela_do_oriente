@@ -267,6 +267,13 @@ class AlunoSerializer(serializers.ModelSerializer):
         classificacoes_data = validated_data.pop('classificacoes', [])
         if isinstance(classificacoes_data, set):
             classificacoes_data = list(classificacoes_data)
+        
+        # Remove campos que não existem no schema antigo do banco
+        campos_nao_existentes = ['genero', 'serie_cursar', 'ano_cursar', 'crianca_alvo_educacao_especial']
+        for campo in campos_nao_existentes:
+            validated_data.pop(campo, None)
+        
+        print(f"🔨 Criando aluno com dados: {list(validated_data.keys())}")
         aluno = Aluno.objects.create(**validated_data)
        
         DocumentosAluno.objects.create(aluno=aluno,**documentos_data)
